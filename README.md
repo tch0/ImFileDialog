@@ -97,10 +97,10 @@ ifd::FileDialog::getInstance().createTexture = [](const uint8_t* data, int w, in
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	return (void*)tex;
+	return reinterpret_cast<void*>(static_cast<uintptr_t>(tex));
 };
 ifd::FileDialog::getInstance().deleteTexture = [](void* tex) {
-	GLuint texID = (GLuint)tex;
+	GLuint texID = static_cast<GLuint>(reinterpret_cast<uintptr_t>(tex));
 	glDeleteTextures(1, &texID);
 };
 ```
