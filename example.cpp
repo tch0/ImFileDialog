@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 			if (ifd::FileDialog::getInstance().hasResult()) {
 				const std::vector<std::filesystem::path>& res = ifd::FileDialog::getInstance().getResults();
 				for (const auto& r : res) {// ShaderOpenDialog supports multiselection
-					printf("OPEN[%s]\n", r.u8string().c_str());
+					printf("OPEN[%s]\n", ifd::u8_as_char(r.u8string().c_str()));
 				}
 			}
 			ifd::FileDialog::getInstance().close();
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 
 		if (ifd::FileDialog::getInstance().isDone("DirectoryOpenDialog")) {
 			if (ifd::FileDialog::getInstance().hasResult()) {
-				std::string res = ifd::FileDialog::getInstance().getResult().u8string();
+				std::string res = ifd::u8_to_string(ifd::FileDialog::getInstance().getResult().u8string());
 				printf("DIRECTORY[%s]\n", res.c_str());
 			}
 			ifd::FileDialog::getInstance().close();
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
 		if (ifd::FileDialog::getInstance().isDone("ShaderSaveDialog")) {
 			if (ifd::FileDialog::getInstance().hasResult()) {
-				std::string res = ifd::FileDialog::getInstance().getResult().u8string();
+				std::string res = ifd::u8_to_string(ifd::FileDialog::getInstance().getResult().u8string());
 				printf("SAVE[%s]\n", res.c_str());
 			}
 			ifd::FileDialog::getInstance().close();

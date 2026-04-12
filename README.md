@@ -67,9 +67,7 @@ To use ImFileDialog in your project, just add `ImFileDialog.h`, `ImFileDialog.cp
 Please note if you already use `stb_image` library in your project, just exculde the `StbImpl.cpp`,
 otherwise you will have multiple definition of methods from the `stb_image` library.
 
-According to https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1423r2.html,
-to make it compile with C++20, the simplest solution to upgrade to c++20 with char8_t,
-so add `/Zc:char8_t-` compiler flag to MSVC or `-fno-char8_t` if you are using `Clang`/`g++`.
+The compiler flags `/Zc:char8_t-` (MSVC) and `-fno-char8_t` (Clang/gcc) are temporary workarounds for migrating legacy code, as documented in P1423R2. They are not required for building this project, which has been natively adapted to support `char8_t`.
 
 And also add `-ftemplate-depth=2048` compiler flag if you are using `clang`/`g++`, this is to 
 `constexpr std::array` compile.
@@ -78,7 +76,7 @@ Here's an example on how to use ImFileDialog:
 
 1. You need to set the CreateTexture and DeleteTexture function
 ```c++
-ifd::FileDialog::getInstance().createTexture = [](uint8_t* data, int w, int h, ifd::Format fmt) -> void* {
+ifd::FileDialog::getInstance().createTexture = [](const uint8_t* data, int w, int h, ifd::Format fmt) -> void* {
 	GLuint tex;
 
 	glGenTextures(1, &tex);
