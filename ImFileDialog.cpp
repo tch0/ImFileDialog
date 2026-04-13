@@ -6,7 +6,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "misc/cpp/imgui_stdlib.h"
 
 #include "stb_image.h"
 
@@ -167,6 +166,89 @@ namespace ifd {
 		0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff
 	);
 
+	// inner InputText implementations, exactly like misc/cpp/imgui_stdlib.cpp
+	namespace {
+		struct InputTextCallback_UserData
+		{
+			std::u8string*              Str;
+			ImGuiInputTextCallback      ChainCallback;
+			void*                       ChainCallbackUserData;
+		};
+		
+		int InputTextCallback(ImGuiInputTextCallbackData* data)
+		{
+			InputTextCallback_UserData* user_data = (InputTextCallback_UserData*)data->UserData;
+			if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
+			{
+				// Resize string callback
+				std::u8string* str = user_data->Str;
+				IM_ASSERT(data->Buf == reinterpret_cast<const char*>(str->c_str()));
+				str->resize(data->BufTextLen);
+				data->Buf = reinterpret_cast<char*>(str->data());
+			}
+			else if (user_data->ChainCallback)
+			{
+				// Forward to user callback, if any
+				data->UserData = user_data->ChainCallbackUserData;
+				return user_data->ChainCallback(data);
+			}
+			return 0;
+		}
+		
+		bool InputText(const char* label, std::u8string* str,
+			ImGuiInputTextFlags flags = 0,
+			ImGuiInputTextCallback callback = nullptr,
+			void* user_data = nullptr)
+		{
+			IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+			flags |= ImGuiInputTextFlags_CallbackResize;
+		
+			InputTextCallback_UserData cb_user_data;
+			cb_user_data.Str = str;
+			cb_user_data.ChainCallback = callback;
+			cb_user_data.ChainCallbackUserData = user_data;
+		
+			return ImGui::InputText(label, reinterpret_cast<char*>(str->data()), static_cast<int>(str->capacity()) + 1,
+									flags, InputTextCallback, &cb_user_data);
+		}
+		
+		bool InputTextMultiline(const char* label, std::u8string* str,
+			const ImVec2& size = ImVec2(0, 0),
+			ImGuiInputTextFlags flags = 0,
+			ImGuiInputTextCallback callback = nullptr,
+			void* user_data = nullptr)
+		{
+			IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+			flags |= ImGuiInputTextFlags_CallbackResize;
+		
+			InputTextCallback_UserData cb_user_data;
+			cb_user_data.Str = str;
+			cb_user_data.ChainCallback = callback;
+			cb_user_data.ChainCallbackUserData = user_data;
+		
+			return ImGui::InputTextMultiline(label, reinterpret_cast<char*>(str->data()), static_cast<int>(str->capacity()) + 1,
+											 size, flags, InputTextCallback, &cb_user_data);
+		}
+		
+		bool InputTextWithHint(const char* label, const char* hint, std::u8string* str,
+			ImGuiInputTextFlags flags = 0,
+			ImGuiInputTextCallback callback = nullptr,
+			void* user_data = nullptr)
+		{
+			IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+			flags |= ImGuiInputTextFlags_CallbackResize;
+		
+			InputTextCallback_UserData cb_user_data;
+			cb_user_data.Str = str;
+			cb_user_data.ChainCallback = callback;
+			cb_user_data.ChainCallbackUserData = user_data;
+		
+			return ImGui::InputTextWithHint(label, hint, reinterpret_cast<char*>(str->data()), static_cast<int>(str->capacity()) + 1,
+											flags, InputTextCallback, &cb_user_data);
+		}
+	} // anonymous namespace
+	
+	
 	float computeIconSize(float fontSize)
 	{
 		return fontSize + EXTRA_SIZE_FOR_ICON;
@@ -385,9 +467,7 @@ namespace ifd {
 				}
 			}
 
-		std::string tempBuffer = u8_to_string(pathBuffer);
-		if (ImGui::InputTextWithHint("##pathbox_input", "", &tempBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			pathBuffer = to_u8string(tempBuffer); // sync when Enter is enough
+		if (InputTextWithHint("##pathbox_input", "", &pathBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
 			if (std::filesystem::exists(std::filesystem::path(pathBuffer))) {
 				path = std::filesystem::path(pathBuffer);
 			}
@@ -1678,10 +1758,7 @@ namespace ifd {
 
 		if (ImGui::BeginPopupModal(__("Enter file name##newfile"))) {
 			ImGui::PushItemWidth(250.0f);
-			std::string tempNewEntryBuffer = u8_to_string(m_newEntryBuffer);
-			if (ImGui::InputText("##newfilename", &tempNewEntryBuffer)) {
-				m_newEntryBuffer = to_u8string(tempNewEntryBuffer);
-			}
+			InputText("##newfilename", &m_newEntryBuffer);
 			ImGui::PopItemWidth();
 
 			if (ImGui::Button(__("OK"))) {
@@ -1703,10 +1780,7 @@ namespace ifd {
 		}
 		if (ImGui::BeginPopupModal(__("Enter directory name##newdir"))) {
 			ImGui::PushItemWidth(250.0f);
-			std::string tempNewEntryBuffer = u8_to_string(m_newEntryBuffer);
-			if (ImGui::InputText("##newfilename", &tempNewEntryBuffer)) {
-				m_newEntryBuffer = to_u8string(tempNewEntryBuffer);
-			}
+			InputText("##newfilename", &m_newEntryBuffer);
 			ImGui::PopItemWidth();
 
 			if (ImGui::Button(__("OK"))) {
@@ -1791,9 +1865,7 @@ namespace ifd {
 		ImGui::SameLine();
 		ImGui::PopStyleColor();
 
-		std::string tempSearchBuffer = u8_to_string(m_searchBuffer);
-		if (ImGui::InputTextWithHint("##searchTB", __("Search"), &tempSearchBuffer)) {
-			m_searchBuffer = to_u8string(tempSearchBuffer);
+		if (InputTextWithHint("##searchTB", __("Search"), &m_searchBuffer)) {
 			m_setDirectory(m_currentDirectory, false); // refresh
 		}
 
@@ -1846,9 +1918,7 @@ namespace ifd {
 		/***** BOTTOM BAR *****/
 		ImGui::Text(__("File name:"));
 		ImGui::SameLine();
-		std::string tempInputTextbox = u8_to_string(m_inputTextbox);
-		if (ImGui::InputTextWithHint("##file_input", __("Filename"), &tempInputTextbox, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			m_inputTextbox = to_u8string(tempInputTextbox);
+		if (InputTextWithHint("##file_input", __("Filename"), &m_inputTextbox, ImGuiInputTextFlags_EnterReturnsTrue)) {
 			bool success = m_finalize(m_inputTextbox);
 #ifdef _WIN32
 			if (!success)
@@ -1857,8 +1927,6 @@ namespace ifd {
 			(void)success;
 #endif
 		}
-		// Changes need to be tracked every frame, because of EnterReturnsTrue flag
-		m_inputTextbox = to_u8string(tempInputTextbox);
 		
 		if (m_type != DialogType::openDirectory) {
 			ImGui::SameLine();
