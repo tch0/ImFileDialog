@@ -385,9 +385,9 @@ namespace ifd {
 				}
 			}
 
-		std::string tempBuffer(pathBuffer.begin(), pathBuffer.end());
+		std::string tempBuffer = u8_to_string(pathBuffer);
 		if (ImGui::InputTextWithHint("##pathbox_input", "", &tempBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			pathBuffer = std::u8string(tempBuffer.begin(), tempBuffer.end());
+			pathBuffer = to_u8string(tempBuffer); // sync when Enter is enough
 			if (std::filesystem::exists(std::filesystem::path(pathBuffer))) {
 				path = std::filesystem::path(pathBuffer);
 			}
@@ -634,9 +634,9 @@ namespace ifd {
 		if (pw) {
 
 #ifdef __APPLE__
-			std::u8string homePath = u8"/Users/" + std::u8string(reinterpret_cast<const char8_t*>(pw->pw_name));
+			std::u8string homePath = u8"/Users/" + to_u8string(pw->pw_name);
 #else
-			std::u8string homePath = u8"/home/" + std::u8string(reinterpret_cast<const char8_t*>(pw->pw_name));
+			std::u8string homePath = u8"/home/" + to_u8string(pw->pw_name);
 #endif
 			
 			if (std::filesystem::exists(homePath)) {
@@ -960,7 +960,7 @@ namespace ifd {
 			else if (filter[i] == '{') {
 				std::u8string filterName = filter.substr(lastSplit, i - lastSplit);
 				if (filterName == u8".*") {
-					m_filter += reinterpret_cast<const char8_t*>(__("All Files (*.*)"));
+					m_filter += to_u8string(__("All Files (*.*)"));
 					m_filter += u8'\0';
 					m_filterExtensions.push_back(std::vector<std::u8string>());
 				} else {
@@ -981,7 +981,7 @@ namespace ifd {
 		if (lastSplit < filter.size()) {
 			std::u8string filterName = filter.substr(lastSplit);
 			if (filterName == u8".*") {
-				m_filter += reinterpret_cast<const char8_t*>(__("All Files (*.*)"));
+				m_filter += to_u8string(__("All Files (*.*)"));
 				m_filter += u8'\0';
 				m_filterExtensions.push_back(std::vector<std::u8string>());
 			}
@@ -1112,7 +1112,7 @@ namespace ifd {
 		if (G_IS_THEMED_ICON(icon)) {
 			const auto names = g_themed_icon_get_names(G_THEMED_ICON(icon));
 			for (int i = 0; names[i] != NULL; i++) {
-				iconPath = m_locateIcon(names[i], DEFAULT_ICON_SIZE);
+				iconPath = m_locateIcon(to_u8string(names[i]), DEFAULT_ICON_SIZE);
 				if (!iconPath.empty()) {
 					break;
 				}
@@ -1678,9 +1678,9 @@ namespace ifd {
 
 		if (ImGui::BeginPopupModal(__("Enter file name##newfile"))) {
 			ImGui::PushItemWidth(250.0f);
-			std::string tempNewEntryBuffer(m_newEntryBuffer.begin(), m_newEntryBuffer.end());
+			std::string tempNewEntryBuffer = u8_to_string(m_newEntryBuffer);
 			if (ImGui::InputText("##newfilename", &tempNewEntryBuffer)) {
-				m_newEntryBuffer = std::u8string(tempNewEntryBuffer.begin(), tempNewEntryBuffer.end());
+				m_newEntryBuffer = to_u8string(tempNewEntryBuffer);
 			}
 			ImGui::PopItemWidth();
 
@@ -1703,9 +1703,9 @@ namespace ifd {
 		}
 		if (ImGui::BeginPopupModal(__("Enter directory name##newdir"))) {
 			ImGui::PushItemWidth(250.0f);
-			std::string tempNewEntryBuffer(m_newEntryBuffer.begin(), m_newEntryBuffer.end());
+			std::string tempNewEntryBuffer = u8_to_string(m_newEntryBuffer);
 			if (ImGui::InputText("##newfilename", &tempNewEntryBuffer)) {
-				m_newEntryBuffer = std::u8string(tempNewEntryBuffer.begin(), tempNewEntryBuffer.end());
+				m_newEntryBuffer = to_u8string(tempNewEntryBuffer);
 			}
 			ImGui::PopItemWidth();
 
@@ -1791,9 +1791,9 @@ namespace ifd {
 		ImGui::SameLine();
 		ImGui::PopStyleColor();
 
-		std::string tempSearchBuffer(m_searchBuffer.begin(), m_searchBuffer.end());
+		std::string tempSearchBuffer = u8_to_string(m_searchBuffer);
 		if (ImGui::InputTextWithHint("##searchTB", __("Search"), &tempSearchBuffer)) {
-			m_searchBuffer = std::u8string(tempSearchBuffer.begin(), tempSearchBuffer.end());
+			m_searchBuffer = to_u8string(tempSearchBuffer);
 			m_setDirectory(m_currentDirectory, false); // refresh
 		}
 
@@ -1846,9 +1846,9 @@ namespace ifd {
 		/***** BOTTOM BAR *****/
 		ImGui::Text(__("File name:"));
 		ImGui::SameLine();
-		std::string tempInputTextbox(m_inputTextbox.begin(), m_inputTextbox.end());
+		std::string tempInputTextbox = u8_to_string(m_inputTextbox);
 		if (ImGui::InputTextWithHint("##file_input", __("Filename"), &tempInputTextbox, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			m_inputTextbox = std::u8string(tempInputTextbox.begin(), tempInputTextbox.end());
+			m_inputTextbox = to_u8string(tempInputTextbox);
 			bool success = m_finalize(m_inputTextbox);
 #ifdef _WIN32
 			if (!success)
@@ -1857,7 +1857,9 @@ namespace ifd {
 			(void)success;
 #endif
 		}
-	
+		// Changes need to be tracked every frame, because of EnterReturnsTrue flag
+		m_inputTextbox = to_u8string(tempInputTextbox);
+		
 		if (m_type != DialogType::openDirectory) {
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(-FLT_MIN);
