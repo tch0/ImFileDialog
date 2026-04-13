@@ -20,6 +20,10 @@ namespace ifd {
 	inline std::u8string to_u8string(const std::string& s) {
 		return std::u8string(s.begin(), s.end());
 	}
+	// Convert const char* (UTF-8 encoding) to std::u8string
+	inline std::u8string to_u8string(const char* s) {
+		return std::u8string(reinterpret_cast<const char8_t*>(s));
+	}
 	// Convert std::u8string to std::string (UTF-8 bytes as char)
 	inline std::string u8_to_string(const std::u8string& s) {
 		return std::string(s.begin(), s.end());
