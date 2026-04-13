@@ -759,7 +759,7 @@ namespace ifd {
 		m_clearIcons();
 	}
 
-	bool FileDialog::save(const std::u8string& key, const std::u8string& title, const std::u8string& filter, const std::u8string& startingDir)
+	bool FileDialog::save(const std::u8string& key, const std::u8string& title, const std::u8string& filter, const std::u8string& fileName, const std::u8string& startingDir)
 	{
 		if (!m_currentKey.empty())
 			return false;
@@ -769,7 +769,7 @@ namespace ifd {
 		m_isOpen = true;
 		m_calledOpenPopup = false;
 		m_result.clear();
-		m_inputTextbox = u8"";
+		m_inputTextbox = fileName;
 		m_selections.clear();
 		m_selectedFileItem = -1;
 		m_isMultiselect = false;
@@ -785,9 +785,9 @@ namespace ifd {
 		return true;
 	}
 
-	bool FileDialog::save(const std::string& key, const std::string& title, const std::string& filter, const std::string& startingDir)
+	bool FileDialog::save(const std::string& key, const std::string& title, const std::string& filter, const std::string& fileName, const std::string& startingDir)
 	{
-		return save(to_u8string(key), to_u8string(title), to_u8string(filter), to_u8string(startingDir));
+		return save(to_u8string(key), to_u8string(title), to_u8string(filter), to_u8string(fileName), to_u8string(startingDir));
 	}
 
 	bool FileDialog::open(const std::u8string& key, const std::u8string& title, const std::u8string& filter, bool isMultiselect, const std::u8string& startingDir)
