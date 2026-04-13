@@ -47,8 +47,8 @@ namespace ifd {
 		
 		// std::u8sting version: all u8strings are UTF-8 encoding
 		// std::string version: all strings are assumed encoded with UTF-8
-		bool save(const std::u8string& key, const std::u8string& title, const std::u8string& filter, const std::u8string& startingDir = u8"");
-		bool save(const std::string& key, const std::string& title, const std::string& filter, const std::string& startingDir = "");
+		bool save(const std::u8string& key, const std::u8string& title, const std::u8string& filter, const std::u8string& fileName = u8"", const std::u8string& startingDir = u8"");
+		bool save(const std::string& key, const std::string& title, const std::string& filter, const std::string& fileName = "", const std::string& startingDir = "");
 		
 		bool open(const std::u8string& key, const std::u8string& title, const std::u8string& filter, bool isMultiselect = false, const std::u8string& startingDir = u8"");
 		bool open(const std::string& key, const std::string& title, const std::string& filter, bool isMultiselect = false, const std::string& startingDir = "");
