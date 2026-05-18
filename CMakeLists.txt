@@ -40,13 +40,25 @@ find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(Threads REQUIRED)
 
-# According to https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1423r2.html
-# The simplest solution to upgrade to c++20 with char8_t 
-if (MSVC)
-    add_compile_options(/Zc:char8_t-)
-else()
+# C++20 char8_t support is now properly handled in the code.
+# Simply disabling char8_t with /Zc:char8_t- (MSVC) or -fno-char8_t (GCC/Clang)
+# is not a good long-term solution for backward compatibility, as it:
+#   - Suppresses a standard C++20 feature instead of embracing it
+#   - May cause subtle issues when integrating with other libraries
+#   - Creates technical debt that will need to be addressed later
+#
+# The code has been updated to use std::u8string and proper UTF-8 conversions,
+# making these flags unnecessary.
+#
+# if (MSVC)
+#     add_compile_options(/Zc:char8_t-)
+# else()
+#     add_compile_options(-fno-char8_t)
+# endif()
+
+if (NOT MSVC)
     # -ftemplate-depth for the DEFAULT_FILE_ICON and DEFAULT_FOLDER_ICON
-    add_compile_options(-fno-char8_t -ftemplate-depth=2048)
+    add_compile_options(-ftemplate-depth=2048)
     if (APPLE)
         # https://github.com/llvm/llvm-project/issues/48757, use -Wno-elaborated-enum-base to suppress the enum bug on Apple
         add_compile_options(-Wno-elaborated-enum-base -ObjC++ -DGL_SILENCE_DEPRECATION)
